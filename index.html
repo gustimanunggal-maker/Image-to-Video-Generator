@@ -1,113 +1,68 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Image to Video AI</title>
-<script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Image to Video Generator</title>
+  <link rel="stylesheet" href="style.css">
 </head>
+<body>
 
-<body class="bg-slate-900 text-white">
+<div class="container">
 
-<div class="max-w-4xl mx-auto p-8">
+  <h1>AI Image to Video Generator</h1>
+  <p class="sub">20 Detik • MP4 • Full HD • Tanpa Watermark</p>
 
-<h1 class="text-4xl font-bold mb-2">
-AI Image to Video Generator
-</h1>
+  <div class="card">
 
-<p class="text-slate-300 mb-8">
-20 Detik • MP4 • HD • Tanpa Watermark
-</p>
+    <label>Upload Gambar</label>
+    <input type="file" id="image" accept="image/*">
 
-<div class="space-y-5">
+    <label>Prompt AI</label>
+    <textarea id="prompt" rows="5"
+      placeholder="Contoh: Cinematic camera movement, realistic lighting, smooth motion..."></textarea>
 
-<div>
-<label>Upload Gambar</label>
-<input id="image" type="file" accept="image/*"
-class="w-full p-3 rounded bg-slate-800">
-</div>
+    <div class="row">
 
-<div>
-<label>Prompt</label>
-<textarea id="prompt"
-rows="5"
-class="w-full p-3 rounded bg-slate-800"
-placeholder="Masukkan prompt cinematic..."></textarea>
-</div>
+      <div>
+        <label>Rasio</label>
+        <select id="ratio">
+          <option value="16:9">16 : 9</option>
+          <option value="9:16">9 : 16</option>
+        </select>
+      </div>
 
-<div class="grid grid-cols-2 gap-4">
+      <div>
+        <label>Kualitas</label>
+        <select id="quality">
+          <option value="1080p">Full HD</option>
+          <option value="720p">HD</option>
+        </select>
+      </div>
 
-<select id="ratio" class="p-3 rounded bg-slate-800">
-<option>16:9</option>
-<option>9:16</option>
-</select>
+    </div>
 
-<select id="quality" class="p-3 rounded bg-slate-800">
-<option>HD</option>
-<option>Full HD</option>
-</select>
+    <button id="generate">Generate Video</button>
 
-</div>
+    <div class="progress">
+      <div id="fill"></div>
+    </div>
 
-<button id="generate"
-class="w-full bg-blue-600 hover:bg-blue-700 p-4 rounded-xl font-bold">
-Generate Video
-</button>
+    <p id="status">Siap digunakan</p>
 
-<div class="h-3 bg-slate-700 rounded-full">
-<div id="bar" class="h-3 w-0 bg-green-500 rounded-full"></div>
-</div>
+  </div>
 
-<video id="video" controls class="w-full rounded-xl hidden"></video>
+  <div class="preview">
+    <img id="previewImg">
+  </div>
 
-<a id="download"
-class="hidden block text-center bg-green-600 p-4 rounded-xl font-bold">
-Download MP4
-</a>
+  <video id="video" controls></video>
+
+  <a id="download">⬇ Download MP4</a>
 
 </div>
 
-</div>
-
-<script>
-const API="https://YOUR-SERVER/api/image-to-video";
-
-document.getElementById("generate").onclick=async()=>{
-
-const file=document.getElementById("image").files[0];
-const prompt=document.getElementById("prompt").value;
-
-if(!file){
-alert("Upload gambar dahulu");
-return;
-}
-
-const form=new FormData();
-form.append("image",file);
-form.append("prompt",prompt);
-form.append("duration","20");
-form.append("ratio",
-document.getElementById("ratio").value);
-form.append("quality",
-document.getElementById("quality").value);
-
-const res=await fetch(API,{
-method:"POST",
-body:form
-});
-
-const data=await res.json();
-
-document.getElementById("video").src=data.video_url;
-document.getElementById("video").classList.remove("hidden");
-
-const d=document.getElementById("download");
-d.href=data.video_url;
-d.download="video.mp4";
-d.classList.remove("hidden");
-
-}
-</script>
+<script src="script.js"></script>
 
 </body>
 </html>
