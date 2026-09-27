@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Image to Video Generator</title>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,Helvetica,sans-serif}
+body{
+background:#0f172a;
+display:flex;
+justify-content:center;
+padding:30px;
+color:#fff;
+}
+.container{
+width:100%;
+max-width:900px;
+background:#1e293b;
+border-radius:20px;
+padding:25px;
+box-shadow:0 10px 30px rgba(0,0,0,.4);
+}
+h1{font-size:28px;margin-bottom:5px}
+.sub{color:#cbd5e1;margin-bottom:20px}
+.grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:15px;
+}
+label{
+display:block;
+margin-bottom:6px;
+font-size:14px;
+color:#cbd5e1;
+}
+input,select,textarea{
+width:100%;
+padding:12px;
+border-radius:10px;
+border:none;
+outline:none;
+background:#334155;
+color:white;
+}
+textarea{resize:vertical}
+.info{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:10px;
+margin:15px 0;
+}
+.card{
+background:#334155;
+padding:15px;
+border-radius:12px;
+text-align:center;
+}
+.card h3{
+font-size:12px;
+color:#cbd5e1;
+margin-bottom:6px;
+}
+.preview{
+margin-top:20px;
+background:black;
+border-radius:15px;
+overflow:hidden;
+display:flex;
+justify-content:center;
+align-items:center;
+}
+canvas{
+width:100%;
+max-height:500px;
+background:black;
+}
+.progress{
+margin:15px 0;
+}
+.bar{
+height:10px;
+background:#475569;
+border-radius:10px;
+overflow:hidden;
+}
+.fill{
+width:0%;
+height:100%;
+background:#22c55e;
+transition:.2s;
+}
+.buttons{
+display:flex;
+gap:10px;
+flex-wrap:wrap;
+}
+button,a{
+padding:14px 18px;
+border:none;
+border-radius:12px;
+font-weight:bold;
+cursor:pointer;
+text-decoration:none;
+text-align:center;
+}
+.generate{
+background:#2563eb;
+color:white;
+}
+.download{
+background:#16a34a;
+color:white;
+pointer-events:none;
+opacity:.5;
+}
+.status{
+margin-top:12px;
+color:#cbd5e1;
+}
+@media(max-width:700px){
+.grid,.info{
+grid-template-columns:1fr;
+}
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>🎬 AI Image to Video Generator</h1>
+<div class="sub">20 Detik • HD • 16:9 / 9:16</div>
+
+<div class="grid">
+
+<div>
+<label>Import Gambar</label>
+<input type="file" id="imageInput" accept="image/*">
+</div>
+
+<div>
+<label>Rasio Video</label>
+<select id="ratio">
+<option value="16:9">16:9 (1280×720)</option>
+<option value="9:16">9:16 (720×1280)</option>
+</select>
+</div>
+
+</div>
+
+<div style="margin-top:15px">
+<label>Prompt AI</label>
+<textarea id="prompt" rows="4" placeholder="Contoh: Cinematic slow camera movement, realistic, soft lighting"></textarea>
+</div>
+
+<div class="info">
+
+<div class="card">
+<h3>Durasi</h3>
+<b>20 Detik</b>
+</div>
+
+<div class="card">
+<h3>Resolusi</h3>
+<b>HD</b>
+</div>
+
+<div class="card">
+<h3>FPS</h3>
+<b>30</b>
+</div>
+
+</div>
+
+<div class="preview">
+<canvas id="canvas"></canvas>
+</div>
+
+<div class="progress">
+<div style="display:flex;justify-content:space-between;margin-bottom:6px">
+<span>Progress</span>
+<span id="percent">0%</span>
+</div>
+<div class="bar">
+<div class="fill" id="fill"></div>
+</div>
+</div>
+
+<div class="buttons">
+<button class="generate" id="generateBtn">Generate Video</button>
+<a class="download" id="downloadBtn" download="video20detik.webm">Download Video</a>
+</div>
+
+<div class="status" id="status">Silakan upload gambar.</div>
+
+</div>
+
+<script>
+const canvas=document.getElementById("canvas");
+const ctx=canvas.getContext("2d");
+
+const imageInput=document.getElementById("imageInput");
+const ratio=document.getElementById("ratio");
+const promptBox=document.getElementById("prompt");
+const generateBtn=document.getElementById("generateBtn");
+const downloadBtn=document.getElementById("downloadBtn");
+const statusText=document.getElementById("status");
+const fill=document.getElementById("fill");
+const percent=document.getElementById("percent");
+
+let img=new Image();
+let imageLoaded=false;
+
+function resizeCanvas(){
+if(ratio.value==="16:9"){
+canvas.width=1280;
+canvas.height=720;
+}else{
+canvas.width=720;
+canvas.height=1280;
+}
+drawFrame(0);
+}
+
+ratio.onchange=resizeCanvas;
+
+imageInput.onchange=(e)=>{
+const file=e.target.files[0];
+if(!file)return;
+const url=URL.createObjectURL(file);
+img.onload=()=>{
+imageLoaded=true;
+resizeCanvas();
+statusText.innerText="Gambar berhasil dimuat.";
+}
+img.src=url;
+};
+
+function drawFrame(progress){
+
+ctx.fillStyle="black";
+ctx.fillRect(0,0,canvas.width,canvas.height);
+
+if(!imageLoaded){
+ctx.fillStyle="gray";
+ctx.font="40px Arial";
+ctx.textAlign="center";
+ctx.fillText("PREVIEW",canvas.width/2,canvas.height/2);
+return;
+}
+
+const zoom=1+progress*0.15;
+
+const iw=img.width*zoom;
+const ih=img.height*zoom;
+
+const cover=Math.max(canvas.width/iw,canvas.height/ih);
+
+const dw=iw*cover;
+const dh=ih*cover;
+
+const ox=(dw-canvas.width)*progress*0.5;
+const oy=(dh-canvas.height)*progress*0.5;
+
+ctx.drawImage(img,-ox,-oy,dw,dh);
+
+const text=promptBox.value.trim();
+
+if(text){
+
+ctx.fillStyle="rgba(0,0,0,.45)";
+ctx.fillRect(0,canvas.height-100,canvas.width,100);
+
+ctx.fillStyle="white";
+ctx.font="bold 34px Arial";
+ctx.textAlign="center";
+wrapText(text,canvas.width/2,canvas.height-55,canvas.width-80,38);
+
+}
+
+}
+
+function wrapText(text,x,y,maxWidth,lineHeight){
+
+const words=text.split(" ");
+let line="";
+const lines=[];
+
+for(let n=0;n<words.length;n++){
+
+let test=line+words[n]+" ";
+
+if(ctx.measureText(test).width>maxWidth && n>0){
+lines.push(line);
+line=words[n]+" ";
+}else{
+line=test;
+}
+
+}
+
+lines.push(line);
+
+let start=y-(lines.length-1)*lineHeight/2;
+
+lines.forEach((l,i)=>{
+ctx.fillText(l.trim(),x,start+i*lineHeight);
+});
+
+}
+
+resizeCanvas();
+
+generateBtn.onclick=async()=>{
+
+if(!imageLoaded){
+alert("Upload gambar terlebih dahulu.");
+return;
+}
+
+generateBtn.disabled=true;
+statusText.innerText="Membuat video 20 detik...";
+
+fill.style.width="0%";
+percent.innerText="0%";
+
+const stream=canvas.captureStream(30);
+
+const recorder=new MediaRecorder(stream,{
+mimeType:"video/webm"
+});
+
+const chunks=[];
+
+recorder.ondataavailable=e=>{
+if(e.data.size>0)chunks.push(e.data);
+};
+
+recorder.onstop=()=>{
+
+const blob=new Blob(chunks,{
+type:"video/webm"
+});
+
+const url=URL.createObjectURL(blob);
+
+downloadBtn.href=url;
+downloadBtn.style.pointerEvents="auto";
+downloadBtn.style.opacity="1";
+
+statusText.innerText="✅ Video selesai dibuat.";
+
+generateBtn.disabled=false;
+
+};
+
+recorder.start();
+
+const duration=20000;
+const start=performance.now();
+
+function animate(now){
+
+const elapsed=now-start;
+const p=Math.min(elapsed/duration,1);
+
+drawFrame(p);
+
+fill.style.width=(p*100)+"%";
+percent.innerText=Math.floor(p*100)+"%";
+
+if(elapsed<duration){
+requestAnimationFrame(animate);
+}else{
+recorder.stop();
+}
+
+}
+
+requestAnimationFrame(animate);
+
+};
+</script>
+
+</body>
+</html>
